@@ -45,6 +45,11 @@ case `uname` in
         fi
         ;;
 
+    FreeBSD)
+        SIMPLE_PLATFORM=freebsd
+        BUNDLE_PLATFORM=freebsd-amd64
+      ;;
+
     MINGW*)
         SIMPLE_PLATFORM=windows
         BUNDLE_PLATFORM=windows-x86_64

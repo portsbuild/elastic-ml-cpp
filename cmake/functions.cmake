@@ -157,6 +157,12 @@ function(ml_add_non_distributed_library _target _type)
       target_link_libraries(${_target} PRIVATE
         "-Wl,--as-needed"
         "${COVERAGE}")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+      target_link_libraries(${_target} PRIVATE
+        "-current_version ${ML_VERSION_NUM}"
+        "-compatibility_version ${ML_VERSION_NUM}"
+        "-Wl,-dead_strip_dylibs"
+        "${COVERAGE}")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
       target_link_libraries(${_target} PRIVATE
         $<$<CONFIG:Release>:-OPT:REF>
