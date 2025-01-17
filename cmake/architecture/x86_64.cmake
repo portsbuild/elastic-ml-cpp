@@ -14,3 +14,7 @@ set (ARCHCFLAGS "-msse4.2")
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   list(APPEND ARCHCFLAGS "-mfpmath=sse")
 endif()
+# todo: verify:
+#if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+#  list(APPEND ARCHCFLAGS "-mfpmath=sse")
+#endif()

@@ -8,23 +8,19 @@
 # compliance with the Elastic License 2.0 and the foregoing additional
 # limitation.
 #
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-  set(CMAKE_INSTALL_RPATH $ORIGIN)
-endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(CMAKE_MACOSX_RPATH 1)
-  set(CMAKE_INSTALL_RPATH "@loader_path")
-endif()
+set(CPP_PLATFORM_HOME $ENV{CPP_SRC_HOME}/build/distribution/platform/freebsd-x86_64)
 
-add_subdirectory(core)
-add_subdirectory(maths/common)
-add_subdirectory(maths/time_series)
-add_subdirectory(maths/analytics)
-add_subdirectory(model)
-add_subdirectory(api)
-add_subdirectory(api/dump_state EXCLUDE_FROM_ALL)
-add_subdirectory(test)
-add_subdirectory(ver)
-add_subdirectory(seccomp)
+message(STATUS "CMAKE_SYSTEM_NAME ${CMAKE_SYSTEM_NAME}")
 
+# this must be first
+include("${CMAKE_CURRENT_LIST_DIR}/functions.cmake")
+
+# include FreeBSD specific settings
+include("${CMAKE_CURRENT_LIST_DIR}/os/freebsd.cmake")
+
+# set the architecture bits
+include("${CMAKE_CURRENT_LIST_DIR}/architecture/x86_64.cmake")
+
+# include clang specific settings
+include("${CMAKE_CURRENT_LIST_DIR}/compiler/clang.cmake")

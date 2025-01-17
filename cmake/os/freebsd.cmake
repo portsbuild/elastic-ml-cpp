@@ -8,23 +8,9 @@
 # compliance with the Elastic License 2.0 and the foregoing additional
 # limitation.
 #
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-  set(CMAKE_INSTALL_RPATH $ORIGIN)
-endif()
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(CMAKE_MACOSX_RPATH 1)
-  set(CMAKE_INSTALL_RPATH "@loader_path")
-endif()
+message(STATUS "FreeBSD detected")
 
-add_subdirectory(core)
-add_subdirectory(maths/common)
-add_subdirectory(maths/time_series)
-add_subdirectory(maths/analytics)
-add_subdirectory(model)
-add_subdirectory(api)
-add_subdirectory(api/dump_state EXCLUDE_FROM_ALL)
-add_subdirectory(test)
-add_subdirectory(ver)
-add_subdirectory(seccomp)
-
+set(EXE_DIR bin)
+set(PLATFORM_NAME "FreeBSD")
+add_compile_definitions(FreeBSD)
