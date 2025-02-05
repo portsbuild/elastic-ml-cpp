@@ -20,6 +20,13 @@
 #include <cstddef>
 #include <vector>
 
+// Avoid FreeBSD sys/param.h#L326 roundup() macro conflict
+#ifdef __FreeBSD__
+#ifdef roundup
+#undef roundup
+#endif
+#endif
+
 namespace ml {
 namespace core {
 

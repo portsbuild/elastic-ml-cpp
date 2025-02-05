@@ -159,9 +159,7 @@ function(ml_add_non_distributed_library _target _type)
         "${COVERAGE}")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
       target_link_libraries(${_target} PRIVATE
-        "-current_version ${ML_VERSION_NUM}"
-        "-compatibility_version ${ML_VERSION_NUM}"
-        "-Wl,-dead_strip_dylibs"
+        "-Wl,--as-needed"
         "${COVERAGE}")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
       target_link_libraries(${_target} PRIVATE
@@ -238,6 +236,10 @@ function(ml_add_library _target _type)
       target_link_libraries(${_target} PRIVATE
         "-Wl,--as-needed"
         "${COVERAGE}")
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+      target_link_libraries(${_target} PRIVATE
+        "-Wl,--as-needed"
+        "${COVERAGE}")
     elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
       target_link_libraries(${_target} PRIVATE
         $<$<CONFIG:Release>:-OPT:REF>
@@ -297,7 +299,7 @@ function(ml_add_executable _target)
 
   ml_install(${_target})
 
-  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  if(CMAKE_SYSTEM_NAME STREQUAL "Darwin" OR CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     target_link_libraries(${_target} PRIVATE "${COVERAGE}")
   endif()
 
@@ -306,6 +308,10 @@ function(ml_add_executable _target)
         "-Wl,-dead_strip_dylibs"
         )
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_link_libraries(${_target} PRIVATE
+      "-Wl,--as-needed"
+      )
+    elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
     target_link_libraries(${_target} PRIVATE
       "-Wl,--as-needed"
       )
@@ -354,6 +360,10 @@ function(ml_add_non_distributed_executable _target)
     target_link_libraries(${_target} PRIVATE
       "-Wl,--as-needed"
       )
+  elseif(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+    target_link_libraries(${_target} PRIVATE
+      "-Wl,--as-needed"
+    )
   elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(${_target} PRIVATE
       -STACK:0x800000

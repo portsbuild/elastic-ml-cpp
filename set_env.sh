@@ -48,7 +48,7 @@ case `uname` in
     FreeBSD)
         SIMPLE_PLATFORM=freebsd
         BUNDLE_PLATFORM=freebsd-amd64
-      ;;
+        ;;
 
     MINGW*)
         SIMPLE_PLATFORM=windows
@@ -116,6 +116,10 @@ case $SIMPLE_PLATFORM in
 
     macos)
         PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
+        ;;
+
+    freebsd)
+        PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
         ;;
 
     windows)
