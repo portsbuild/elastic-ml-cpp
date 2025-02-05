@@ -11,10 +11,6 @@
 
 message(STATUS "x86_64 detected for target")
 set (ARCHCFLAGS "-msse4.2")
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
   list(APPEND ARCHCFLAGS "-mfpmath=sse")
 endif()
-# todo: verify:
-#if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-#  list(APPEND ARCHCFLAGS "-mfpmath=sse")
-#endif()

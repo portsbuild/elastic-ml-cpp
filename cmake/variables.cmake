@@ -113,7 +113,6 @@ else()
   set(C10_LIB   "${ML_BASE_PATH}/lib/libc10${ML_LIBEXT}")
 endif()
 
-# todo: freebsd
 if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(LIBXML2_LIBRARIES "-lxml2")
 else()
@@ -139,6 +138,15 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 else ()
   list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES ${ML_BASE_PATH}/include/libxml2)
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES ${SYSROOT}/usr/include ${SYSROOT}/usr/local/include)
+  find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+  if(EIGEN3_FOUND)
+    # list(APPEND ML_LINK_LIBRARIES Eigen3::Eigen)
+    list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
+  endif()
+endif ()
 
 list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES
   ${TORCH_INC}
@@ -204,7 +212,13 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
 endif()
 
 if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-# todo
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DEXCLUDE_TRACE_LOGGING -Wdisabled-optimization")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O3 -DNDEBUG -DEXCLUDE_TRACE_LOGGING -Wdisabled-optimization")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_SANITIZER "-fsanitize=address -g -O3 -fno-omit-frame-pointer" CACHE STRING
+          "Flags used by the C++ compiler during sanitizer builds."
+          FORCE)
+
 endif()
 
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE = ${CMAKE_CXX_FLAGS_RELEASE}")
