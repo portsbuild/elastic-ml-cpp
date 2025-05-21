@@ -161,6 +161,9 @@ if [ -z "$BUILDKITE" ] ; then
     # On macOS it should be /usr/local/lib when installed with brew
     elif [ -d "/usr/local/lib/ccache" ] ; then
         PATH=/usr/local/lib/ccache:$PATH
+    # On FreeBSD it should be /usr/local/bin when installed with pkg
+    elif [ -d "/usr/local/bin/ccache" ] ; then
+        PATH=/usr/local/bin/ccache:$PATH
     fi
 fi
 
