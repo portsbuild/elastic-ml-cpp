@@ -53,6 +53,13 @@
 #include <string>
 #include <utility>
 
+// Avoid FreeBSD sys/param.h#L332 MAX() macro conflict
+#ifdef __FreeBSD__
+#ifdef MAX
+#undef MAX
+#endif
+#endif
+
 BOOST_AUTO_TEST_SUITE(CHierarchicalResultsTest)
 
 using namespace ml;

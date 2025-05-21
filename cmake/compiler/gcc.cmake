@@ -10,8 +10,13 @@
 #
 
 # which compilers to use for C and C++
-set(CMAKE_C_COMPILER   "/usr/local/gcc133/bin/gcc")
-set(CMAKE_CXX_COMPILER "/usr/local/gcc133/bin/g++")
+if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  set(CMAKE_C_COMPILER   "/usr/local/bin/gcc13")
+  set(CMAKE_CXX_COMPILER "/usr/local/bin/g++13")
+else
+  set(CMAKE_C_COMPILER   "/usr/local/gcc133/bin/gcc")
+  set(CMAKE_CXX_COMPILER "/usr/local/gcc133/bin/g++")
+endif()
 
 # Detect architecture from ARCHCFLAGS (set by architecture/*.cmake files)
 if(ARCHCFLAGS MATCHES "-march=armv8")
@@ -20,10 +25,17 @@ else()
   set(CMAKE_SYSTEM_PROCESSOR "x86_64")
 endif()
 
-set(CMAKE_AR       "/usr/local/gcc133/bin/ar")
-set(CMAKE_RANLIB   "/usr/local/gcc133/bin/ranlib")
-set(CMAKE_STRIP    "/usr/local/gcc133/bin/strip")
-set(CMAKE_LINKER   "/usr/local/gcc133/bin/ld")
+if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  set(CMAKE_AR       "/usr/local/bin/gcc-ar13")
+  set(CMAKE_RANLIB   "/usr/local/bin/gcc-ranlib13")
+  set(CMAKE_STRIP    "/usr/local/bin/strip")
+  set(CMAKE_LINKER   "/usr/local/bin/ld")
+else
+  set(CMAKE_AR       "/usr/local/gcc133/bin/ar")
+  set(CMAKE_RANLIB   "/usr/local/gcc133/bin/ranlib")
+  set(CMAKE_STRIP    "/usr/local/gcc133/bin/strip")
+  set(CMAKE_LINKER   "/usr/local/gcc133/bin/ld")
+endif()
 
 SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> -ru <TARGET> <OBJECTS>")
 
