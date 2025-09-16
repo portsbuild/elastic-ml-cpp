@@ -19,6 +19,7 @@ String mlDebug = System.getProperty("build.ml_debug", "")
 boolean isWindows = OperatingSystem.current().isWindows()
 boolean isLinux = OperatingSystem.current().isLinux()
 boolean isMacOsX = OperatingSystem.current().isMacOsX()
+boolean isFreeBSD = OperatingSystem.current().isFreeBSD()
 
 allprojects {
   group = 'org.elasticsearch.ml'
@@ -72,6 +73,8 @@ if (isWindows) {
   artifactClassifier = 'windows-x86_64'
 } else if (isMacOsX || cppCrossCompile == 'macosx') {
   artifactClassifier = 'darwin-' + osArch
+} else if (isFreeBSD) {
+  artifactClassifier = 'freebsd-' + osArch
 } else if (cppCrossCompile != '') {
   artifactClassifier = 'linux-' + cppCrossCompile
 } else {
@@ -207,6 +210,7 @@ task buildUberZip(type: Zip) {
   def localZips = fileTree("${buildDir}/distributions").matching {
       include "${artifactName}-${project.version}-darwin-*.zip"
       include "${artifactName}-${project.version}-linux-*.zip"
+      include "${artifactName}-${project.version}-freebsd-*.zip"
       include "${artifactName}-${project.version}-windows-*.zip"
   }
   for (zipFile in localZips) {
@@ -276,7 +280,7 @@ class DownloadPlatformSpecific extends DefaultTask {
   File extractDirectory
 
   @Input
-  List<String> platforms = [ 'darwin-aarch64', 'darwin-x86_64', 'linux-aarch64', 'linux-x86_64', 'windows-x86_64' ]
+  List<String> platforms = [ 'darwin-aarch64', 'darwin-x86_64', 'freebsd-x86_64', 'linux-aarch64', 'linux-x86_64', 'windows-x86_64' ]
 
   DownloadPlatformSpecific() {
     // Always run this task, in case the platform-specific zips have changed

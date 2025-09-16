@@ -47,7 +47,7 @@ case `uname` in
 
     FreeBSD)
         SIMPLE_PLATFORM=freebsd
-        BUNDLE_PLATFORM=freebsd-amd64
+        BUNDLE_PLATFORM=freebsd-x86_64
         ;;
 
     MINGW*)
@@ -141,6 +141,10 @@ case $SIMPLE_PLATFORM in
 
     linux)
         export LD_LIBRARY_PATH=/usr/local/gcc133/lib64:/usr/local/gcc133/lib:/usr/lib:/lib
+        ;;
+
+    freebsd)
+        export LD_LIBRARY_PATH=/usr/local/lib/gcc133:/usr/local/lib32/gcc133:/usr/local/lib:/usr/lib
         ;;
 
     windows)
