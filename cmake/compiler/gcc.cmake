@@ -13,7 +13,7 @@
 if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
   set(CMAKE_C_COMPILER   "/usr/local/bin/gcc13")
   set(CMAKE_CXX_COMPILER "/usr/local/bin/g++13")
-else
+else()
   set(CMAKE_C_COMPILER   "/usr/local/gcc133/bin/gcc")
   set(CMAKE_CXX_COMPILER "/usr/local/gcc133/bin/g++")
 endif()
@@ -30,7 +30,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
   set(CMAKE_RANLIB   "/usr/local/bin/gcc-ranlib13")
   set(CMAKE_STRIP    "/usr/local/bin/strip")
   set(CMAKE_LINKER   "/usr/local/bin/ld")
-else
+else()
   set(CMAKE_AR       "/usr/local/gcc133/bin/ar")
   set(CMAKE_RANLIB   "/usr/local/gcc133/bin/ranlib")
   set(CMAKE_STRIP    "/usr/local/gcc133/bin/strip")
