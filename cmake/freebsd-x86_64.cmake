@@ -23,5 +23,5 @@ include("${CMAKE_CURRENT_LIST_DIR}/os/freebsd.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/architecture/x86_64.cmake")
 
 # include clang specific settings
-# include("${CMAKE_CURRENT_LIST_DIR}/compiler/clang.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/compiler/gcc.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/compiler/clang.cmake")
+# include("${CMAKE_CURRENT_LIST_DIR}/compiler/gcc.cmake")
