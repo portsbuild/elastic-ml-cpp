@@ -27,6 +27,7 @@
 #include "CBufferedIStreamAdapter.h"
 #include "CCmdLineParser.h"
 #include "CCommandParser.h"
+#include "CModelGraphValidator.h"
 #include "CResultWriter.h"
 #include "CThreadSettings.h"
 
@@ -42,24 +43,58 @@
 #include <string>
 
 namespace {
-// Add more forbidden ops here if needed
-const std::unordered_set<std::string_view> FORBIDDEN_OPERATIONS = {"aten::from_file", "aten::save"};
-
 void verifySafeModel(const torch::jit::script::Module& module_) {
     try {
-        const auto method = module_.get_method("forward");
-        for (const auto graph = method.graph(); const auto& node : graph->nodes()) {
-            if (const std::string opName = node->kind().toQualString();
-                FORBIDDEN_OPERATIONS.contains(opName)) {
-                HANDLE_FATAL(<< "Loading the inference process failed because it contains forbidden operation: "
-                             << opName);
-            }
-        }
-    } catch (const c10::Error& e) {
-        LOG_FATAL(<< "Failed to get forward method: " << e.what());
-    }
+        auto result = ml::torch::CModelGraphValidator::validate(module_);
 
-    LOG_DEBUG(<< "Model verified: no forbidden operations detected.");
+        if (result.s_ForbiddenOps.empty() == false) {
+            std::string ops = ml::core::CStringUtils::join(result.s_ForbiddenOps, ", ");
+            HANDLE_FATAL(<< "Model contains forbidden operations: " << ops);
+        }
+
+        if (result.s_UnrecognisedOps.empty() == false) {
+            std::string ops = ml::core::CStringUtils::join(result.s_UnrecognisedOps, ", ");
+            HANDLE_FATAL(<< "Model graph does not match any supported architecture. "
+                         << "Unrecognised operations: " << ops);
+        }
+
+        if (result.s_NodeCount > ml::torch::CModelGraphValidator::MAX_NODE_COUNT) {
+            HANDLE_FATAL(<< "Model graph is too large: " << result.s_NodeCount << " nodes exceeds limit of "
+                         << ml::torch::CModelGraphValidator::MAX_NODE_COUNT);
+        }
+
+        if (result.s_IsValid == false) {
+            HANDLE_FATAL(<< "Model graph validation failed");
+        }
+
+        LOG_DEBUG(<< "Model verified: " << result.s_NodeCount
+                  << " nodes, all operations match supported architectures.");
+    } catch (const c10::Error& e) {
+        HANDLE_FATAL(<< "Model graph validation failed: " << e.what());
+    }
+}
+
+//! Reject models with custom TorchScript state hooks BEFORE torch::jit::load.
+//! Load executes __setstate__ during deserialization, so post-load graph
+//! validation runs too late.  Matching the recommended remediation for a
+//! privately reported finding, any __setstate__/__getstate__ hooks are refused
+//! outright.  Incomplete scans (unreadable / truncated zip records) are also
+//! refused — fail closed — so path-length evasions cannot skip the hook check.
+//! Forbidden / unrecognised ops in methods that only run when invoked remain
+//! the job of verifySafeModel() after a successful load.
+//! \p modelData / \p modelSize are the raw bytes of the buffered .pt archive.
+void verifySafeModelBeforeLoad(const char* modelData, std::size_t modelSize) {
+    auto hooks = ml::torch::CModelGraphValidator::scanArchiveForCustomStateHooks(
+        modelData, modelSize);
+    if (hooks.empty()) {
+        return;
+    }
+    if (hooks.size() == 1 && hooks[0] == ml::torch::CModelGraphValidator::SCAN_INCOMPLETE_MARKER) {
+        HANDLE_FATAL(<< "Model archive failed pre-load state-hook scan "
+                     << "(unreadable or truncated zip record; possible evasion)");
+    }
+    std::string names = ml::core::CStringUtils::join(hooks, ", ");
+    HANDLE_FATAL(<< "Model archive contains custom state hooks: " << names);
 }
 }
 
@@ -191,13 +226,14 @@ int main(int argc, char** argv) {
     bool validElasticLicenseKeyConfirmed{false};
     bool lowPriority{false};
     bool useImmediateExecutor{false};
+    bool skipModelValidation{false};
 
     if (ml::torch::CCmdLineParser::parse(
             argc, argv, modelId, namedPipeConnectTimeout, inputFileName,
-            isInputFileNamedPipe, outputFileName, isOutputFileNamedPipe,
-            restoreFileName, isRestoreFileNamedPipe, logFileName, logProperties,
-            numThreadsPerAllocation, numAllocations, cacheMemorylimitBytes,
-            validElasticLicenseKeyConfirmed, lowPriority, useImmediateExecutor) == false) {
+            isInputFileNamedPipe, outputFileName, isOutputFileNamedPipe, restoreFileName,
+            isRestoreFileNamedPipe, logFileName, logProperties, numThreadsPerAllocation,
+            numAllocations, cacheMemorylimitBytes, validElasticLicenseKeyConfirmed,
+            lowPriority, useImmediateExecutor, skipModelValidation) == false) {
         return EXIT_FAILURE;
     }
 
@@ -282,7 +318,7 @@ int main(int argc, char** argv) {
     // allocations rather than per allocation. But macOS is not supported for
     // production, but just as a convenience for developers. So the most
     // important thing is that the threading works as intended on Linux.
-    at::set_num_threads(threadSettings.numThreadsPerAllocation());
+    at::set_num_threads(static_cast<int>(threadSettings.numThreadsPerAllocation()));
 
     // This is not used as we don't call at::launch anywhere.
     // Setting it to 1 to ensure there is no thread pool sitting around.
@@ -302,8 +338,19 @@ int main(int argc, char** argv) {
         if (readAdapter->init() == false) {
             return EXIT_FAILURE;
         }
+        if (skipModelValidation == false) {
+            // Reject custom state hooks before loading so that __setstate__
+            // (which torch::jit::load would execute during deserialization)
+            // never runs.  Op allowlisting remains a post-load check.
+            verifySafeModelBeforeLoad(readAdapter->buffer(), readAdapter->size());
+        }
         module_ = torch::jit::load(std::move(readAdapter));
-        verifySafeModel(module_);
+        if (skipModelValidation) {
+            LOG_WARN(<< "Model graph validation SKIPPED — --skipModelValidation flag is set. "
+                     << "This disables security checks on model operations.");
+        } else {
+            verifySafeModel(module_);
+        }
         module_.eval();
 
         LOG_DEBUG(<< "model loaded");
