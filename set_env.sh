@@ -45,6 +45,11 @@ case `uname` in
         fi
         ;;
 
+    FreeBSD)
+        SIMPLE_PLATFORM=freebsd
+        BUNDLE_PLATFORM=freebsd-x86_64
+        ;;
+
     MINGW*)
         SIMPLE_PLATFORM=windows
         BUNDLE_PLATFORM=windows-x86_64
@@ -113,6 +118,10 @@ case $SIMPLE_PLATFORM in
         PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
         ;;
 
+    freebsd)
+        PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin
+        ;;
+
     windows)
         PATH=/mingw64/bin:/usr/bin:/bin:$ROOT/Windows/System32:$ROOT/Windows:$ROOT/PROGRA~1/CMake/bin
         PATH=$ROOT/usr/local/bin:$ROOT/usr/local/sbin:$PATH
@@ -134,6 +143,10 @@ case $SIMPLE_PLATFORM in
         export LD_LIBRARY_PATH=/usr/local/gcc133/lib64:/usr/local/gcc133/lib:/usr/lib:/lib
         ;;
 
+    freebsd)
+        export LD_LIBRARY_PATH=/usr/local/lib/gcc133:/usr/local/lib32/gcc133:/usr/local/lib:/usr/lib
+        ;;
+
     windows)
         # On Windows there's no separate library path - $PATH is used
         PATH=$CPP_PLATFORM_HOME/bin:$PATH:$ROOT/usr/local/lib
@@ -152,6 +165,9 @@ if [ -z "$BUILDKITE" ] ; then
     # On macOS it should be /usr/local/lib when installed with brew
     elif [ -d "/usr/local/lib/ccache" ] ; then
         PATH=/usr/local/lib/ccache:$PATH
+    # On FreeBSD it should be /usr/local/bin when installed with pkg
+    elif [ -d "/usr/local/bin/ccache" ] ; then
+        PATH=/usr/local/bin/ccache:$PATH
     fi
 fi
 

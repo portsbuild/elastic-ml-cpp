@@ -75,6 +75,14 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   if(NOT Boost_ROOT AND NOT DEFINED ENV{BOOST_ROOT})
     set(Boost_ROOT ${ROOT}/usr/local)
   endif()
+elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  set(ML_BOOST_COMPILER_VER "gcc${CMAKE_CXX_COMPILER_VERSION_MAJOR}")
+  ## clang:
+  # if(DEFINED ENV{BOOSTCLANGVER})
+  #   set(ML_BOOST_COMPILER_VER "-clang-freebsd$ENV{BOOSTCLANGVER}")
+  # else()
+  #   set(ML_BOOST_COMPILER_VER "-clang-freebsd${CMAKE_CXX_COMPILER_VERSION_MAJOR}")
+  # endif()
 else()
   message(FATAL_ERROR "Unsupported platform: ${CMAKE_SYSTEM_NAME}")
 endif()
@@ -90,7 +98,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
   string(APPEND ML_BASE_PATH "gcc133")
 endif()
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if (CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
   set(ML_LIBEXT ".so")
 elseif (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   set(ML_LIBEXT ".dylib")
@@ -105,6 +113,12 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 else()
   set(TORCH_LIB "${ML_BASE_PATH}/lib/libtorch_cpu${ML_LIBEXT}")
   set(C10_LIB   "${ML_BASE_PATH}/lib/libc10${ML_LIBEXT}")
+endif()
+
+if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(LIBXML2_LIBRARIES "-lxml2")
+else()
+  set(LIBXML2_LIBRARIES "${ML_BASE_PATH}/lib/libxml2${ML_LIBEXT}")
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -124,6 +138,15 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
   endif()
   list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES ${SYSROOT}/usr/include ${SYSROOT}/usr/local/include)
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES ${SYSROOT}/usr/include ${SYSROOT}/usr/local/include)
+  find_package(Eigen3 3.4 REQUIRED NO_MODULE)
+  if(EIGEN3_FOUND)
+    # list(APPEND ML_LINK_LIBRARIES Eigen3::Eigen)
+    list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES ${EIGEN3_INCLUDE_DIRS})
+  endif()
+endif ()
 
 list(APPEND ML_SYSTEM_INCLUDE_DIRECTORIES
   ${TORCH_INC}
@@ -187,6 +210,17 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
           FORCE)
 
 endif()
+
+if(CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG -DEXCLUDE_TRACE_LOGGING -Wdisabled-optimization")
+  set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -O3 -DNDEBUG -DEXCLUDE_TRACE_LOGGING -Wdisabled-optimization")
+  set(CMAKE_CXX_FLAGS_DEBUG "-g")
+  set(CMAKE_CXX_FLAGS_SANITIZER "-fsanitize=address -g -O3 -fno-omit-frame-pointer" CACHE STRING
+          "Flags used by the C++ compiler during sanitizer builds."
+          FORCE)
+
+endif()
+
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE = ${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO = ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG = ${CMAKE_CXX_FLAGS_DEBUG}")
